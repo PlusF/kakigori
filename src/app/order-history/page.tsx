@@ -17,7 +17,13 @@ import {
   Checkbox,
   Menu,
 } from "@mantine/core";
-import { useState, useEffect, useContext, useRef } from "react";
+import {
+  useState,
+  useEffect,
+  useContext,
+  useOptimistic,
+  startTransition,
+} from "react";
 import {
   IconShoppingCart,
   IconReceipt,
@@ -57,8 +63,21 @@ export default function OrderHistory() {
   const router = useRouter();
   const { startLoading, stopLoading } = useContext(LoadingContext);
   const { year } = useContext(YearContext);
-  // 楽観的更新の最中はポーリング結果で上書きしない
-  const pendingServings = useRef(0);
+
+  const [optimisticOrders, applyOptimisticServing] = useOptimistic(
+    orders,
+    (state, { orderId, served }: { orderId: string; served: boolean }) =>
+      state.map((order) =>
+        order.id === orderId
+          ? {
+              ...order,
+              Serving: served
+                ? [{ id: order.id, orderId, createdAt: new Date() }]
+                : [],
+            }
+          : order
+      )
+  );
 
   useEffect(() => {
     if (!year) return;
@@ -70,10 +89,7 @@ export default function OrderHistory() {
         startLoading();
       }
       try {
-        const fetched = await getOrders(year);
-        if (pendingServings.current === 0) {
-          setOrders(fetched);
-        }
+        setOrders(await getOrders(year));
       } catch (error) {
         console.error("Failed to fetch orders:", error);
       } finally {
@@ -97,38 +113,20 @@ export default function OrderHistory() {
       minute: "2-digit",
     });
 
-  const handleServingChange = async (
-    order: OrderWithItems,
-    served: boolean
-  ) => {
-    const rollback = orders;
-    pendingServings.current += 1;
-    setOrders((prev) =>
-      prev.map((o) =>
-        o.id === order.id
-          ? {
-              ...o,
-              Serving: served
-                ? [{ id: o.id, orderId: o.id, createdAt: new Date() }]
-                : [],
-            }
-          : o
-      )
-    );
-
-    try {
-      setOrders(await setServing(order.id, served));
-    } catch (error) {
-      console.error("Failed to update serving:", error);
-      setOrders(rollback);
-      notifications.show({
-        title: "エラー",
-        message: "提供の記録に失敗しました",
-        color: "red",
-      });
-    } finally {
-      pendingServings.current -= 1;
-    }
+  const handleServingChange = (order: OrderWithItems, served: boolean) => {
+    startTransition(async () => {
+      applyOptimisticServing({ orderId: order.id, served });
+      try {
+        setOrders(await setServing(order.id, served));
+      } catch (error) {
+        console.error("Failed to update serving:", error);
+        notifications.show({
+          title: "エラー",
+          message: "提供の記録に失敗しました",
+          color: "red",
+        });
+      }
+    });
   };
 
   const handleEditClick = (order: OrderWithItems) => {
@@ -215,7 +213,7 @@ export default function OrderHistory() {
         注文履歴
       </Title>
 
-      {orders.length === 0 ? (
+      {optimisticOrders.length === 0 ? (
         <Paper p="xl" withBorder>
           <Stack align="center" gap="md">
             <IconShoppingCart size={48} color={theme.colors.gray[5]} />
@@ -226,7 +224,7 @@ export default function OrderHistory() {
         </Paper>
       ) : (
         <Stack gap="md">
-          {orders.map((order, index) => (
+          {optimisticOrders.map((order, index) => (
             <Card
               key={order.id}
               shadow="sm"
@@ -242,7 +240,7 @@ export default function OrderHistory() {
                       size={20}
                       color={theme.colors[theme.primaryColor][6]}
                     />
-                    <Text size="lg">注文 #{orders.length - index}</Text>
+                    <Text size="lg">注文 #{optimisticOrders.length - index}</Text>
                   </Group>
                   <Checkbox
                     aria-label="提供"

@@ -22,12 +22,14 @@ import {
   IconReceipt,
   IconEdit,
   IconTrash,
+  IconToolsKitchen2,
 } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
 import { useRouter } from "next/navigation";
 import { getOrders } from "../_actions/getOrders";
 import { updateOrder } from "../_actions/updateOrder";
 import { deleteOrder } from "../_actions/deleteOrder";
+import { createServing } from "../_actions/createServing";
 import { LoadingContext } from "../_contexts/LoadingContext";
 import { YearContext } from "../_contexts/YearContext";
 import { OrderWithItems, unitPrice } from "@/types/types";
@@ -91,6 +93,28 @@ export default function OrderHistory() {
       hour: "2-digit",
       minute: "2-digit",
     });
+
+  const formatTime = (date: Date | string) =>
+    new Date(date).toLocaleTimeString("ja-JP", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
+  const handleServe = async (order: OrderWithItems) => {
+    startLoading();
+    try {
+      setOrders(await createServing(order.id));
+    } catch (error) {
+      console.error("Failed to record serving:", error);
+      notifications.show({
+        title: "エラー",
+        message: "提供の記録に失敗しました",
+        color: "red",
+      });
+    } finally {
+      stopLoading();
+    }
+  };
 
   const handleEditClick = (order: OrderWithItems) => {
     setSelectedOrder(order);
@@ -205,6 +229,21 @@ export default function OrderHistory() {
                     <Text size="lg">注文 #{orders.length - index}</Text>
                   </Group>
                   <Group gap="xs">
+                    {order.Serving.map((serving) => (
+                      <Badge key={serving.id} variant="light" color="green">
+                        提供 {formatTime(serving.createdAt)}
+                      </Badge>
+                    ))}
+                    <Button
+                      size="xs"
+                      variant="light"
+                      color="green"
+                      radius="md"
+                      leftSection={<IconToolsKitchen2 size={16} />}
+                      onClick={() => handleServe(order)}
+                    >
+                      提供
+                    </Button>
                     <Badge variant="light" color="blue">
                       {formatDate(order.createdAt)}
                     </Badge>

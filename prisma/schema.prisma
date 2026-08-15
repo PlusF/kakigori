@@ -71,8 +71,19 @@ model Order {
   updatedAt DateTime    @updatedAt
   Year      Year        @relation(fields: [year], references: [year], onDelete: Cascade)
   OrderItem OrderItem[]
+  Serving   Serving[]
 
   @@index([year, createdAt])
+}
+
+/// 提供イベント。注文に対して発生した都度 1 行増える
+model Serving {
+  id        String   @id @default(uuid())
+  orderId   String
+  createdAt DateTime @default(now())
+  Order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
 }
 
 model OrderItem {

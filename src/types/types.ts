@@ -30,6 +30,7 @@ export type OrderWithItems = Prisma.OrderGetPayload<{
         OrderItemOption: { include: { Option: true } };
       };
     };
+    Serving: true;
   };
 }>;
 

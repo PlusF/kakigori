@@ -13,6 +13,7 @@ export async function getOrders(year: number): Promise<OrderWithItems[]> {
           OrderItemOption: { include: { Option: true } },
         },
       },
+      Serving: { orderBy: { createdAt: "asc" } },
     },
     orderBy: { createdAt: "desc" },
   });

@@ -17,7 +17,7 @@ import {
   Checkbox,
   Menu,
 } from "@mantine/core";
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext, useRef } from "react";
 import {
   IconShoppingCart,
   IconReceipt,
@@ -57,6 +57,8 @@ export default function OrderHistory() {
   const router = useRouter();
   const { startLoading, stopLoading } = useContext(LoadingContext);
   const { year } = useContext(YearContext);
+  // 楽観的更新の最中はポーリング結果で上書きしない
+  const pendingServings = useRef(0);
 
   useEffect(() => {
     if (!year) return;
@@ -68,7 +70,10 @@ export default function OrderHistory() {
         startLoading();
       }
       try {
-        setOrders(await getOrders(year));
+        const fetched = await getOrders(year);
+        if (pendingServings.current === 0) {
+          setOrders(fetched);
+        }
       } catch (error) {
         console.error("Failed to fetch orders:", error);
       } finally {
@@ -96,15 +101,33 @@ export default function OrderHistory() {
     order: OrderWithItems,
     served: boolean
   ) => {
+    const rollback = orders;
+    pendingServings.current += 1;
+    setOrders((prev) =>
+      prev.map((o) =>
+        o.id === order.id
+          ? {
+              ...o,
+              Serving: served
+                ? [{ id: o.id, orderId: o.id, createdAt: new Date() }]
+                : [],
+            }
+          : o
+      )
+    );
+
     try {
       setOrders(await setServing(order.id, served));
     } catch (error) {
       console.error("Failed to update serving:", error);
+      setOrders(rollback);
       notifications.show({
         title: "エラー",
         message: "提供の記録に失敗しました",
         color: "red",
       });
+    } finally {
+      pendingServings.current -= 1;
     }
   };
 

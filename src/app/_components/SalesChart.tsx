@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useContext, useMemo } from "react";
-import { Paper, Stack, Title, Text, Group, Select } from "@mantine/core";
+import { Paper, Stack, Title, Text, Group, Select, Table } from "@mantine/core";
 import {
   BarChart,
   Bar,
@@ -56,6 +56,17 @@ export function SalesChart() {
       ? selectedDate
       : (dateOptions.at(-1)?.value ?? null);
 
+  const dayOrders = useMemo(
+    () =>
+      activeDate
+        ? orders.filter(
+            (order) =>
+              dayjs(order.createdAt).format("YYYY-MM-DD") === activeDate
+          )
+        : [],
+    [orders, activeDate]
+  );
+
   const chartData = useMemo(() => {
     if (!activeDate) return [];
 
@@ -66,24 +77,41 @@ export function SalesChart() {
       }
     }
 
-    orders
-      .filter(
-        (order) => dayjs(order.createdAt).format("YYYY-MM-DD") === activeDate
-      )
-      .forEach((order) => {
-        const orderDate = dayjs(order.createdAt);
-        const timeKey = orderDate
-          .minute(Math.floor(orderDate.minute() / 30) * 30)
-          .format("HH:mm");
-        if (intervals[timeKey] !== undefined) {
-          intervals[timeKey] += 1;
-        }
-      });
+    dayOrders.forEach((order) => {
+      const orderDate = dayjs(order.createdAt);
+      const timeKey = orderDate
+        .minute(Math.floor(orderDate.minute() / 30) * 30)
+        .format("HH:mm");
+      if (intervals[timeKey] !== undefined) {
+        intervals[timeKey] += 1;
+      }
+    });
 
     return Object.entries(intervals)
       .map(([time, orderCount]) => ({ time, orderCount }))
       .sort((a, b) => a.time.localeCompare(b.time));
-  }, [orders, activeDate]);
+  }, [dayOrders, activeDate]);
+
+  // 同じ商品でもオプション違いで OrderItem が分かれるのでメニュー単位に足し戻す
+  const menuStats = useMemo(() => {
+    const counts = new Map<string, { name: string; quantity: number }>();
+
+    dayOrders.forEach((order) => {
+      order.OrderItem.forEach((item) => {
+        const current = counts.get(item.menuItemId);
+        if (current) {
+          current.quantity += item.quantity;
+        } else {
+          counts.set(item.menuItemId, {
+            name: item.MenuItem.name,
+            quantity: item.quantity,
+          });
+        }
+      });
+    });
+
+    return [...counts.values()].sort((a, b) => b.quantity - a.quantity);
+  }, [dayOrders]);
 
   return (
     <Paper shadow="sm" p="lg" radius="md" withBorder>
@@ -144,6 +172,25 @@ export function SalesChart() {
         <Text size="xs" c="dimmed" ta="center">
           30分ごとの注文数を表示 (営業時間: {OPEN_HOUR}:00 - {CLOSE_HOUR}:00)
         </Text>
+
+        {menuStats.length > 0 && (
+          <Table>
+            <Table.Thead>
+              <Table.Tr>
+                <Table.Th>商品名</Table.Th>
+                <Table.Th>注文数</Table.Th>
+              </Table.Tr>
+            </Table.Thead>
+            <Table.Tbody>
+              {menuStats.map((stat) => (
+                <Table.Tr key={stat.name}>
+                  <Table.Td>{stat.name}</Table.Td>
+                  <Table.Td>{stat.quantity}</Table.Td>
+                </Table.Tr>
+              ))}
+            </Table.Tbody>
+          </Table>
+        )}
       </Stack>
     </Paper>
   );

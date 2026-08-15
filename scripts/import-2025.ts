@@ -1,13 +1,21 @@
 import { readFileSync } from "node:fs";
-import { Client } from "pg";
+import { Client, types } from "pg";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../src/generated/prisma/client";
 
 /**
  * kakigori2025 の DB から 2025 年のメニューと注文を取り込む一度きりのスクリプト。
- * usage: npm run import-2025 -- ../kakigori2025/.env
+ * usage: npm run import-2025 -- ../kakigori2025/.env [--reset]
  */
-const legacyEnvPath = process.argv[2] ?? "../kakigori2025/.env";
+
+// pg は timestamp without time zone をローカル時刻として解釈するが、
+// Prisma が書いた値は UTC なので明示的に UTC として読む
+types.setTypeParser(types.builtins.TIMESTAMP, (value) => new Date(`${value}Z`));
+
+const args = process.argv.slice(2);
+const legacyEnvPath =
+  args.find((arg) => !arg.startsWith("--")) ?? "../kakigori2025/.env";
+const reset = args.includes("--reset");
 const legacyUrl = readFileSync(legacyEnvPath, "utf8")
   .split("\n")
   .find((line) => line.startsWith("DATABASE_URL="))
@@ -83,6 +91,11 @@ async function main() {
       update: { label: "2025年" },
       create: { year: 2025, label: "2025年" },
     });
+
+    if (reset) {
+      const { count } = await prisma.order.deleteMany({ where: { year: 2025 } });
+      console.log(`reset: 注文${count}件を削除`);
+    }
 
     const menuItemIdMap = new Map<string, string>();
     for (const [index, item] of menuItems.entries()) {

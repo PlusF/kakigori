@@ -47,6 +47,7 @@ npx prisma db seed                      # seed（YEAR=2026 で年を絞れる）
 - `src/app/_actions/` - Server Actions
 - `src/app/_components/` - 共有コンポーネント
 - `src/app/_contexts/` - LoadingContext, YearContext
+- `src/app/admin/` - 管理ページ（年の確定・解除・新設、メニューとオプションの編集）
 - `src/types/types.ts` - 型と価格計算ヘルパ
 - `prisma/seed-data.ts` - 年ごとのメニュー定義
 
@@ -62,3 +63,5 @@ npx prisma db seed                      # seed（YEAR=2026 で年を絞れる）
 1. 表示中の年は `YearContext` が持つ。データ取得系はすべて `year` を引数に取り、`year` が null の間は fetch しない
 2. 単価は `unitPrice(menuItem.price, options)`（`src/types/types.ts`）で統一。合計はサーバー側で `calcTotal` が DB の価格を正として計算し直す
 3. ダッシュボードと注文履歴は 5 秒ポーリングで更新する
+4. 更新系 Server Action は例外を投げず `ActionResult`（`src/types/types.ts`）を返す。例外は必ず 500 になり、本番では文言もクライアントに渡らない
+5. `/admin` は `ADMIN_PASSWORD` との突き合わせだけの合言葉認証。Cookie に合言葉をそのまま入れて `src/lib/admin.ts` で毎回見る。ナビゲーションからは辿れず URL を直接開く。管理系の Server Action は必ず `assertAdmin()` を通す

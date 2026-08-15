@@ -24,7 +24,7 @@ import {
   IconShoppingCart,
   IconHistory,
 } from "@tabler/icons-react";
-import { notifications } from "@mantine/notifications";
+import { notifyError } from "../_components/notify";
 import { useContext, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -128,11 +128,7 @@ export default function OrderPage() {
         }))
       );
       if (!result.ok) {
-        notifications.show({
-          title: "エラー",
-          message: result.message,
-          color: "red",
-        });
+        notifyError(result.message);
         return;
       }
       setCart([]);
@@ -140,11 +136,7 @@ export default function OrderPage() {
       router.refresh();
     } catch (error) {
       console.error("Failed to create order:", error);
-      notifications.show({
-        title: "エラー",
-        message: "注文の登録に失敗しました",
-        color: "red",
-      });
+      notifyError("注文の登録に失敗しました");
     } finally {
       stopLoading();
     }

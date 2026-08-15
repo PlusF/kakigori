@@ -32,6 +32,7 @@ import {
   IconDots,
 } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
+import { notifyError } from "../_components/notify";
 import { useRouter } from "next/navigation";
 import { getOrders } from "../_actions/getOrders";
 import { updateOrder } from "../_actions/updateOrder";
@@ -119,21 +120,13 @@ export default function OrderHistory() {
       try {
         const result = await setServing(order.id, served);
         if (!result.ok) {
-          notifications.show({
-            title: "エラー",
-            message: result.message,
-            color: "red",
-          });
+          notifyError(result.message);
           return;
         }
         setOrders(result.data);
       } catch (error) {
         console.error("Failed to update serving:", error);
-        notifications.show({
-          title: "エラー",
-          message: "提供の記録に失敗しました",
-          color: "red",
-        });
+        notifyError("提供の記録に失敗しました");
       }
     });
   };
@@ -176,11 +169,7 @@ export default function OrderHistory() {
         }))
       );
       if (!result.ok) {
-        notifications.show({
-          title: "エラー",
-          message: result.message,
-          color: "red",
-        });
+        notifyError(result.message);
         return;
       }
       setOrders(result.data);
@@ -193,11 +182,7 @@ export default function OrderHistory() {
       router.refresh();
     } catch (error) {
       console.error("Failed to update order:", error);
-      notifications.show({
-        title: "エラー",
-        message: "注文の更新に失敗しました",
-        color: "red",
-      });
+      notifyError("注文の更新に失敗しました");
     } finally {
       stopLoading();
     }
@@ -210,11 +195,7 @@ export default function OrderHistory() {
     try {
       const result = await deleteOrder(selectedOrder.id);
       if (!result.ok) {
-        notifications.show({
-          title: "エラー",
-          message: result.message,
-          color: "red",
-        });
+        notifyError(result.message);
         return;
       }
       setOrders(result.data);
@@ -227,11 +208,7 @@ export default function OrderHistory() {
       router.refresh();
     } catch (error) {
       console.error("Failed to delete order:", error);
-      notifications.show({
-        title: "エラー",
-        message: "注文の削除に失敗しました",
-        color: "red",
-      });
+      notifyError("注文の削除に失敗しました");
     } finally {
       stopLoading();
     }

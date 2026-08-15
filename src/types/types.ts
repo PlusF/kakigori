@@ -22,6 +22,32 @@ export const defaultOptions = (menuItem: MenuItemWithOptions) =>
 export const defaultOptionIds = (menuItem: MenuItemWithOptions) =>
   defaultOptions(menuItem).map(({ id }) => id);
 
+/** 管理ページは無効にしたものも編集できる必要があるので isActive で絞らない */
+export type AdminMenu = {
+  menuItems: MenuItemWithOptions[];
+  options: Option[];
+};
+
+/** id が null なら新規作成 */
+export type MenuItemInput = {
+  id: string | null;
+  name: string;
+  price: number;
+  image: string;
+  targetQuantity: number;
+  sortOrder: number;
+  isActive: boolean;
+  options: { optionId: string; isDefault: boolean }[];
+};
+
+export type OptionInput = {
+  id: string | null;
+  name: string;
+  price: number;
+  sortOrder: number;
+  isActive: boolean;
+};
+
 export type OrderWithItems = Prisma.OrderGetPayload<{
   include: {
     OrderItem: {

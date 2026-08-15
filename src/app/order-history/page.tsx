@@ -215,15 +215,15 @@ export default function OrderHistory() {
               opacity={order.Serving.length > 0 ? 0.5 : 1}
             >
               <Stack gap="sm">
-                <Group justify="space-between">
-                  <Group gap="xs">
+                <Group justify="space-between" wrap="nowrap">
+                  <Group gap="xs" wrap="nowrap">
                     <IconReceipt
                       size={20}
                       color={theme.colors[theme.primaryColor][6]}
                     />
                     <Text size="lg">注文 #{orders.length - index}</Text>
                   </Group>
-                  <Group gap="xs">
+                  <Group gap="xs" wrap="nowrap">
                     <Badge variant="light" color="blue">
                       {formatDate(order.createdAt)}
                     </Badge>
@@ -244,7 +244,7 @@ export default function OrderHistory() {
                       <IconTrash size={16} />
                     </ActionIcon>
                     <Checkbox
-                      label="提供"
+                      aria-label="提供"
                       checked={order.Serving.length > 0}
                       onChange={(event) =>
                         handleServingChange(order, event.currentTarget.checked)

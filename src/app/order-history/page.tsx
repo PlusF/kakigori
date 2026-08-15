@@ -15,6 +15,7 @@ import {
   Button,
   Modal,
   NumberInput,
+  Checkbox,
 } from "@mantine/core";
 import { useState, useEffect, useContext } from "react";
 import {
@@ -22,14 +23,13 @@ import {
   IconReceipt,
   IconEdit,
   IconTrash,
-  IconToolsKitchen2,
 } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
 import { useRouter } from "next/navigation";
 import { getOrders } from "../_actions/getOrders";
 import { updateOrder } from "../_actions/updateOrder";
 import { deleteOrder } from "../_actions/deleteOrder";
-import { createServing } from "../_actions/createServing";
+import { setServing } from "../_actions/setServing";
 import { LoadingContext } from "../_contexts/LoadingContext";
 import { YearContext } from "../_contexts/YearContext";
 import { OrderWithItems, unitPrice } from "@/types/types";
@@ -94,25 +94,19 @@ export default function OrderHistory() {
       minute: "2-digit",
     });
 
-  const formatTime = (date: Date | string) =>
-    new Date(date).toLocaleTimeString("ja-JP", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-
-  const handleServe = async (order: OrderWithItems) => {
-    startLoading();
+  const handleServingChange = async (
+    order: OrderWithItems,
+    served: boolean
+  ) => {
     try {
-      setOrders(await createServing(order.id));
+      setOrders(await setServing(order.id, served));
     } catch (error) {
-      console.error("Failed to record serving:", error);
+      console.error("Failed to update serving:", error);
       notifications.show({
         title: "エラー",
         message: "提供の記録に失敗しました",
         color: "red",
       });
-    } finally {
-      stopLoading();
     }
   };
 
@@ -218,6 +212,7 @@ export default function OrderHistory() {
               padding="lg"
               radius="md"
               withBorder
+              opacity={order.Serving.length > 0 ? 0.5 : 1}
             >
               <Stack gap="sm">
                 <Group justify="space-between">
@@ -229,21 +224,6 @@ export default function OrderHistory() {
                     <Text size="lg">注文 #{orders.length - index}</Text>
                   </Group>
                   <Group gap="xs">
-                    {order.Serving.map((serving) => (
-                      <Badge key={serving.id} variant="light" color="green">
-                        提供 {formatTime(serving.createdAt)}
-                      </Badge>
-                    ))}
-                    <Button
-                      size="xs"
-                      variant="light"
-                      color="green"
-                      radius="md"
-                      leftSection={<IconToolsKitchen2 size={16} />}
-                      onClick={() => handleServe(order)}
-                    >
-                      提供
-                    </Button>
                     <Badge variant="light" color="blue">
                       {formatDate(order.createdAt)}
                     </Badge>
@@ -263,6 +243,13 @@ export default function OrderHistory() {
                     >
                       <IconTrash size={16} />
                     </ActionIcon>
+                    <Checkbox
+                      label="提供"
+                      checked={order.Serving.length > 0}
+                      onChange={(event) =>
+                        handleServingChange(order, event.currentTarget.checked)
+                      }
+                    />
                   </Group>
                 </Group>
 

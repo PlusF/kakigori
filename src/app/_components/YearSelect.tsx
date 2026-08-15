@@ -14,7 +14,7 @@ export default function YearSelect() {
       data={years.map((y) => ({ value: String(y.year), label: y.label }))}
       placeholder="開催年"
       allowDeselect={false}
-      w={160}
+      w={100}
       size="sm"
     />
   );

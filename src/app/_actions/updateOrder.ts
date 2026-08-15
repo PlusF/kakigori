@@ -2,17 +2,24 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { OrderInput } from "@/types/types";
-import { assertYearNotSettled } from "./assertYearNotSettled";
+import { ActionResult, OrderInput, OrderWithItems } from "@/types/types";
+import { settledReason } from "./settledReason";
 import { calcTotal } from "./calcTotal";
 import { getOrders } from "./getOrders";
 
-export async function updateOrder(orderId: string, items: OrderInput[]) {
+export async function updateOrder(
+  orderId: string,
+  items: OrderInput[]
+): Promise<ActionResult<OrderWithItems[]>> {
   const order = await prisma.order.findUniqueOrThrow({
     where: { id: orderId },
     select: { year: true },
   });
-  await assertYearNotSettled(order.year);
+
+  const reason = await settledReason(order.year);
+  if (reason) {
+    return { ok: false, message: reason };
+  }
 
   const total = await calcTotal(order.year, items);
 
@@ -38,5 +45,5 @@ export async function updateOrder(orderId: string, items: OrderInput[]) {
   revalidatePath("/");
   revalidatePath("/order");
   revalidatePath("/order-history");
-  return getOrders(order.year);
+  return { ok: true, data: await getOrders(order.year) };
 }

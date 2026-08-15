@@ -117,7 +117,16 @@ export default function OrderHistory() {
     startTransition(async () => {
       applyOptimisticServing({ orderId: order.id, served });
       try {
-        setOrders(await setServing(order.id, served));
+        const result = await setServing(order.id, served);
+        if (!result.ok) {
+          notifications.show({
+            title: "エラー",
+            message: result.message,
+            color: "red",
+          });
+          return;
+        }
+        setOrders(result.data);
       } catch (error) {
         console.error("Failed to update serving:", error);
         notifications.show({
@@ -129,8 +138,7 @@ export default function OrderHistory() {
     });
   };
 
-  // サーバー側でも弾いているが、本番では Server Action の例外文言が
-  // クライアントに渡らないためここで理由を出す
+  // サーバー側でも弾くが、編集させてから断るのは無駄なのでモーダルを開く前に見る
   const rejectSettled = (action: string) => {
     if (!isSettled(years, year)) return false;
     notifications.show({
@@ -167,7 +175,15 @@ export default function OrderHistory() {
           optionIds: item.OrderItemOption.map(({ optionId }) => optionId),
         }))
       );
-      setOrders(result);
+      if (!result.ok) {
+        notifications.show({
+          title: "エラー",
+          message: result.message,
+          color: "red",
+        });
+        return;
+      }
+      setOrders(result.data);
       setEditModalOpened(false);
       notifications.show({
         title: "更新完了",
@@ -193,7 +209,15 @@ export default function OrderHistory() {
     startLoading();
     try {
       const result = await deleteOrder(selectedOrder.id);
-      setOrders(result);
+      if (!result.ok) {
+        notifications.show({
+          title: "エラー",
+          message: result.message,
+          color: "red",
+        });
+        return;
+      }
+      setOrders(result.data);
       setDeleteModalOpened(false);
       notifications.show({
         title: "削除完了",

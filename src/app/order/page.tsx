@@ -129,7 +129,7 @@ export default function OrderPage() {
       );
       if (!result.ok) {
         notifications.show({
-          title: "注文できません",
+          title: "エラー",
           message: result.message,
           color: "red",
         });

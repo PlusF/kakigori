@@ -30,7 +30,16 @@ export default function Settle() {
 
     startLoading();
     try {
-      setYears(await settleYear(year));
+      const result = await settleYear(year);
+      if (!result.ok) {
+        notifications.show({
+          title: "エラー",
+          message: result.message,
+          color: "red",
+        });
+        return;
+      }
+      setYears(result.data);
       setModalOpened(false);
       notifications.show({
         title: "会計確定",

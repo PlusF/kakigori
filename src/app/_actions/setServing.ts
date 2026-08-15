@@ -2,15 +2,23 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { assertYearNotSettled } from "./assertYearNotSettled";
+import { ActionResult, OrderWithItems } from "@/types/types";
+import { settledReason } from "./settledReason";
 import { getOrders } from "./getOrders";
 
-export async function setServing(orderId: string, served: boolean) {
+export async function setServing(
+  orderId: string,
+  served: boolean
+): Promise<ActionResult<OrderWithItems[]>> {
   const order = await prisma.order.findUniqueOrThrow({
     where: { id: orderId },
     select: { year: true, Serving: { select: { id: true } } },
   });
-  await assertYearNotSettled(order.year);
+
+  const reason = await settledReason(order.year);
+  if (reason) {
+    return { ok: false, message: reason };
+  }
 
   if (served && order.Serving.length === 0) {
     await prisma.serving.create({ data: { orderId } });
@@ -19,5 +27,5 @@ export async function setServing(orderId: string, served: boolean) {
   }
 
   revalidatePath("/order-history");
-  return getOrders(order.year);
+  return { ok: true, data: await getOrders(order.year) };
 }

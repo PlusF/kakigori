@@ -34,6 +34,15 @@ export type OrderWithItems = Prisma.OrderGetPayload<{
   };
 }>;
 
+/**
+ * 更新系 Server Action の戻り値。
+ * 例外を投げると必ず 500 になり、本番では文言もクライアントに渡らないため、
+ * 会計確定済みのような想定内の失敗は戻り値で返す
+ */
+export type ActionResult<T = null> =
+  | { ok: true; data: T }
+  | { ok: false; message: string };
+
 /** 注文確定前のカート行。同一メニューでもオプションが違えば別行になる */
 export type CartItem = {
   key: string;

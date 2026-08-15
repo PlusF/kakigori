@@ -16,6 +16,11 @@ npx prisma migrate dev --name <name>    # マイグレーション
 npx prisma db seed                      # seed（YEAR=2026 で年を絞れる）
 ```
 
+## Git / デプロイ
+
+- ブランチを切らず `main` に直接コミットして push する
+- `main` への push で Vercel の本番デプロイが自動で走る
+
 ## Architecture
 
 ### Tech Stack

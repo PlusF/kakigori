@@ -7,7 +7,8 @@
     "build": "npx prisma generate && next build",
     "start": "next start",
     "lint": "eslint",
-    "new-year": "tsx scripts/create-year.ts"
+    "new-year": "tsx scripts/create-year.ts",
+    "import-2025": "tsx scripts/import-2025.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

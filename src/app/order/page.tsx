@@ -22,8 +22,10 @@ import {
   IconMinus,
   IconTrash,
   IconShoppingCart,
+  IconHistory,
 } from "@tabler/icons-react";
 import { useContext, useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getMenu } from "../_actions/getMenu";
 import { createOrder } from "../_actions/createOrder";
@@ -136,9 +138,20 @@ export default function OrderPage() {
 
   return (
     <Stack gap="xl">
-      <Title order={1} size="h1" c={theme.primaryColor}>
-        注文
-      </Title>
+      <Group justify="space-between">
+        <Title order={1} size="h1" c={theme.primaryColor}>
+          注文
+        </Title>
+        <Button
+          component={Link}
+          href="/order-history"
+          variant="light"
+          radius="md"
+          leftSection={<IconHistory size={18} />}
+        >
+          注文履歴
+        </Button>
+      </Group>
 
       <Grid gap="xl">
         <Grid.Col span={{ base: 12, md: 8 }}>

@@ -1,9 +1,9 @@
+import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@/generated/prisma/client";
 
-// Prisma Postgres 経由。CLI 系（migrate/seed）は直結の DATABASE_URL を使う
-const accelerateUrl = process.env.PRISMA_DATABASE_URL;
-if (!accelerateUrl) {
-  throw new Error("PRISMA_DATABASE_URL is not set");
+const connectionString = process.env.DATABASE_URL;
+if (!connectionString) {
+  throw new Error("DATABASE_URL is not set");
 }
 
 const globalForPrisma = globalThis as unknown as {
@@ -11,6 +11,7 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 export const prisma =
-  globalForPrisma.prisma ?? new PrismaClient({ accelerateUrl });
+  globalForPrisma.prisma ??
+  new PrismaClient({ adapter: new PrismaPg({ connectionString }) });
 
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;

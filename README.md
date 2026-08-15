@@ -14,14 +14,13 @@ DB は Vercel の Prisma Postgres を使う（2025 と同じ構成）。
 ```bash
 npm install
 vercel link
-vercel env pull .env   # PRISMA_DATABASE_URL と DATABASE_URL が入る
+vercel env pull .env   # DATABASE_URL が入る
 npx prisma migrate dev --name init
 npx prisma db seed
 npm run dev
 ```
 
-- `PRISMA_DATABASE_URL` … アプリのランタイムが使う Accelerate 経由の接続
-- `DATABASE_URL` … `prisma migrate` / `db seed` / `studio` が使う直結の接続
+アプリも Prisma CLI も `DATABASE_URL` を使う。
 
 ## 年の運用
 

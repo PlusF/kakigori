@@ -21,7 +21,7 @@ npx prisma db seed                      # seed（YEAR=2026 で年を絞れる）
 ### Tech Stack
 
 - Next.js 16 (App Router) / React 19 / Mantine 9 / TypeScript
-- Vercel の Prisma Postgres + Prisma 7
+- Vercel の Prisma Postgres + Prisma 7（driver adapter `@prisma/adapter-pg`）
 - グラフは recharts、アイコンは Tabler Icons
 
 ### バージョン固定の理由
@@ -31,10 +31,10 @@ npx prisma db seed                      # seed（YEAR=2026 で年を絞れる）
 
 ### Prisma 7 の作法
 
-- 接続先は `schema.prisma` ではなく `prisma.config.ts` の `datasource.url`（= 直結の `DATABASE_URL`）に書く
+- 接続先は `schema.prisma` ではなく `prisma.config.ts` の `datasource.url` に書く
 - CLI は `.env` を自動で読まないので `prisma.config.ts` / スクリプト側で `process.loadEnvFile()` する
-- クライアントは `src/generated/prisma`（gitignore 済み）に生成される。アプリからは `src/lib/prisma.ts` 経由で使い、`PrismaClient` には Accelerate の `accelerateUrl`（= `PRISMA_DATABASE_URL`）を渡す
-- `prisma/seed.ts` と `scripts/create-year.ts` は CLI 実行なので、直結の `DATABASE_URL` + `@prisma/adapter-pg` で繋ぐ
+- クライアントは `src/generated/prisma`（gitignore 済み）に生成される。アプリからは `src/lib/prisma.ts` 経由で使い、`PrismaClient` には `@prisma/adapter-pg` を渡す
+- Vercel の Prisma Postgres は素の `postgres://` を配るので Accelerate（`accelerateUrl`）は使えない。`prisma+postgres://` でない URL を `accelerateUrl` に渡すと実行時に落ちる
 
 ### Key Directories
 

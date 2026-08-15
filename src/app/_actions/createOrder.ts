@@ -2,12 +2,14 @@
 
 import { prisma } from "@/lib/prisma";
 import { assertYear } from "@/lib/assertYear";
+import { assertYearNotSettled } from "./assertYearNotSettled";
 import { revalidatePath } from "next/cache";
 import { OrderInput } from "@/types/types";
 import { calcTotal } from "./calcTotal";
 
 export async function createOrder(year: number, items: OrderInput[]) {
   assertYear(year);
+  await assertYearNotSettled(year);
 
   const total = await calcTotal(year, items);
 

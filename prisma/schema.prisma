@@ -10,6 +10,8 @@ datasource db {
 model Year {
   year      Int        @id
   label     String
+  /// 会計確定日時。確定後はこの年に紐づくものを一切変更できない
+  settledAt DateTime?
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
   MenuItem  MenuItem[]
@@ -67,8 +69,6 @@ model Order {
   id        String      @id @default(uuid())
   year      Int
   total     Int
-  /// 会計確定日時。確定後は取り消せず、削除もできない
-  settledAt DateTime?
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
   Year      Year        @relation(fields: [year], references: [year], onDelete: Cascade)

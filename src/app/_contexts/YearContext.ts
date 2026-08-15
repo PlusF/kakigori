@@ -8,8 +8,14 @@ export const YearContext = createContext<{
   year: number | null;
   years: Year[];
   setYear: (year: number) => void;
+  setYears: (years: Year[]) => void;
 }>({
   year: null,
   years: [],
   setYear: () => {},
+  setYears: () => {},
 });
+
+/** 会計確定済みなら変更操作を受け付けない */
+export const isSettled = (years: Year[], year: number | null) =>
+  years.find((y) => y.year === year)?.settledAt != null;

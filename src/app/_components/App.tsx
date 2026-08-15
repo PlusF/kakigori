@@ -52,7 +52,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <LoadingContext.Provider value={{ loading, startLoading, stopLoading }}>
-      <YearContext.Provider value={{ year, years, setYear }}>
+      <YearContext.Provider value={{ year, years, setYear, setYears }}>
         <LoadingOverlay
           visible={loading}
           zIndex={9999}

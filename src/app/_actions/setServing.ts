@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { assertYearNotSettled } from "./assertYearNotSettled";
 import { getOrders } from "./getOrders";
 
 export async function setServing(orderId: string, served: boolean) {
@@ -9,6 +10,7 @@ export async function setServing(orderId: string, served: boolean) {
     where: { id: orderId },
     select: { year: true, Serving: { select: { id: true } } },
   });
+  await assertYearNotSettled(order.year);
 
   if (served && order.Serving.length === 0) {
     await prisma.serving.create({ data: { orderId } });

@@ -1,6 +1,7 @@
 export type YearSeed = {
   year: number;
   label: string;
+  /** オプションはどのかき氷にも付けられる */
   options: { name: string; price: number }[];
   menuItems: {
     name: string;
@@ -8,7 +9,8 @@ export type YearSeed = {
     price: number;
     image: string;
     targetQuantity: number;
-    options: { name: string; isDefault?: boolean }[];
+    /** 最初から選択済みにするオプション名 */
+    defaultOptions?: string[];
   }[];
 };
 
@@ -23,25 +25,22 @@ export const yearSeeds: YearSeed[] = [
     ],
     menuItems: [
       {
-        name: "初恋いちご",
+        name: "いちご",
         price: 300,
         image: "strawberry.jpg",
         targetQuantity: 200,
-        options: [{ name: "練乳" }],
       },
       {
-        name: "青春ブルーハワイ",
+        name: "ブルーハワイ",
         price: 300,
         image: "blue-hawaii.jpg",
         targetQuantity: 200,
-        options: [],
       },
       {
         name: "レモンサワー",
         price: 500,
         image: "",
         targetQuantity: 100,
-        options: [],
       },
       {
         // オレンジ込みで 600 円
@@ -49,7 +48,7 @@ export const yearSeeds: YearSeed[] = [
         price: 500,
         image: "cassis.jpg",
         targetQuantity: 100,
-        options: [{ name: "オレンジ", isDefault: true }],
+        defaultOptions: ["オレンジ"],
       },
     ],
   },

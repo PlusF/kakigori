@@ -55,18 +55,11 @@ async function seedYear(seed: YearSeed) {
       },
     });
 
-    const links = menuItem.options.map((option) => {
-      const id = options.get(option.name);
-      if (!id) throw new Error(`Unknown option: ${option.name}`);
-      return { optionId: id, isDefault: option.isDefault ?? false };
-    });
+    const links = [...options].map(([name, optionId]) => ({
+      optionId,
+      isDefault: menuItem.defaultOptions?.includes(name) ?? false,
+    }));
 
-    await prisma.menuItemOption.deleteMany({
-      where: {
-        menuItemId: saved.id,
-        optionId: { notIn: links.map((link) => link.optionId) },
-      },
-    });
     for (const link of links) {
       await prisma.menuItemOption.upsert({
         where: {

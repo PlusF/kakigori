@@ -6,7 +6,6 @@ import {
   Stack,
   Paper,
   Group,
-  Badge,
   useMantineTheme,
   Card,
   Divider,
@@ -16,6 +15,7 @@ import {
   Modal,
   NumberInput,
   Checkbox,
+  Menu,
 } from "@mantine/core";
 import { useState, useEffect, useContext } from "react";
 import {
@@ -23,6 +23,7 @@ import {
   IconReceipt,
   IconEdit,
   IconTrash,
+  IconDots,
 } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
 import { useRouter } from "next/navigation";
@@ -85,11 +86,8 @@ export default function OrderHistory() {
     return () => clearInterval(interval);
   }, [startLoading, stopLoading, year]);
 
-  const formatDate = (date: Date | string) =>
-    new Date(date).toLocaleString("ja-JP", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
+  const formatTime = (date: Date | string) =>
+    new Date(date).toLocaleTimeString("ja-JP", {
       hour: "2-digit",
       minute: "2-digit",
     });
@@ -223,34 +221,49 @@ export default function OrderHistory() {
                     />
                     <Text size="lg">注文 #{orders.length - index}</Text>
                   </Group>
-                  <Group gap="xs" wrap="nowrap">
-                    <Badge variant="light" color="blue">
-                      {formatDate(order.createdAt)}
-                    </Badge>
-                    <ActionIcon
-                      variant="subtle"
-                      color="blue"
-                      radius="md"
-                      onClick={() => handleEditClick(order)}
-                    >
-                      <IconEdit size={16} />
-                    </ActionIcon>
-                    <ActionIcon
-                      variant="subtle"
-                      color="red"
-                      radius="md"
-                      onClick={() => handleDeleteClick(order)}
-                    >
-                      <IconTrash size={16} />
-                    </ActionIcon>
-                    <Checkbox
-                      aria-label="提供"
-                      checked={order.Serving.length > 0}
-                      onChange={(event) =>
-                        handleServingChange(order, event.currentTarget.checked)
-                      }
-                    />
-                  </Group>
+                  <Checkbox
+                    aria-label="提供"
+                    checked={order.Serving.length > 0}
+                    onChange={(event) =>
+                      handleServingChange(order, event.currentTarget.checked)
+                    }
+                  />
+                </Group>
+
+                <Group justify="space-between" wrap="nowrap" align="flex-start">
+                  <Stack gap={2}>
+                    <Text size="sm" c="dimmed">
+                      注文: {formatTime(order.createdAt)}
+                    </Text>
+                    <Text size="sm" c="dimmed">
+                      提供:{" "}
+                      {order.Serving.length > 0
+                        ? formatTime(order.Serving[0].createdAt)
+                        : "—"}
+                    </Text>
+                  </Stack>
+                  <Menu position="bottom-end" withArrow>
+                    <Menu.Target>
+                      <ActionIcon variant="subtle" color="gray" radius="md">
+                        <IconDots size={18} />
+                      </ActionIcon>
+                    </Menu.Target>
+                    <Menu.Dropdown>
+                      <Menu.Item
+                        leftSection={<IconEdit size={16} />}
+                        onClick={() => handleEditClick(order)}
+                      >
+                        編集
+                      </Menu.Item>
+                      <Menu.Item
+                        color="red"
+                        leftSection={<IconTrash size={16} />}
+                        onClick={() => handleDeleteClick(order)}
+                      >
+                        削除
+                      </Menu.Item>
+                    </Menu.Dropdown>
+                  </Menu>
                 </Group>
 
                 <Divider />

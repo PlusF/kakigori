@@ -169,10 +169,6 @@ export function SalesChart() {
           </Text>
         )}
 
-        <Text size="xs" c="dimmed" ta="center">
-          30分ごとの注文数を表示 (営業時間: {OPEN_HOUR}:00 - {CLOSE_HOUR}:00)
-        </Text>
-
         {menuStats.length > 0 && (
           <Table>
             <Table.Thead>

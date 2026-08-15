@@ -27,13 +27,13 @@ export const yearSeeds: YearSeed[] = [
       {
         name: "いちご",
         price: 300,
-        image: "strawberry.jpg",
+        image: "",
         targetQuantity: 200,
       },
       {
         name: "ブルーハワイ",
         price: 300,
-        image: "blue-hawaii.jpg",
+        image: "",
         targetQuantity: 200,
       },
       {
@@ -46,7 +46,7 @@ export const yearSeeds: YearSeed[] = [
         // オレンジ込みで 600 円
         name: "カシスオレンジ",
         price: 500,
-        image: "cassis.jpg",
+        image: "",
         targetQuantity: 100,
         defaultOptions: ["オレンジ"],
       },

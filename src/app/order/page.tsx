@@ -24,6 +24,7 @@ import {
   IconShoppingCart,
   IconHistory,
 } from "@tabler/icons-react";
+import { notifications } from "@mantine/notifications";
 import { useContext, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -118,7 +119,7 @@ export default function OrderPage() {
 
     startLoading();
     try {
-      await createOrder(
+      const result = await createOrder(
         year,
         cart.map((item) => ({
           menuItemId: item.menuItem.id,
@@ -126,11 +127,24 @@ export default function OrderPage() {
           optionIds: item.options.map((option) => option.id),
         }))
       );
+      if (!result.ok) {
+        notifications.show({
+          title: "注文できません",
+          message: result.message,
+          color: "red",
+        });
+        return;
+      }
       setCart([]);
       resetSelectedOptions(menuItems);
       router.refresh();
     } catch (error) {
       console.error("Failed to create order:", error);
+      notifications.show({
+        title: "エラー",
+        message: "注文の登録に失敗しました",
+        color: "red",
+      });
     } finally {
       stopLoading();
     }

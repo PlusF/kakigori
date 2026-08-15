@@ -2,14 +2,25 @@
 
 import { prisma } from "@/lib/prisma";
 import { assertYear } from "@/lib/assertYear";
-import { assertYearNotSettled } from "./assertYearNotSettled";
+import { settledReason } from "./assertYearNotSettled";
 import { revalidatePath } from "next/cache";
 import { OrderInput } from "@/types/types";
 import { calcTotal } from "./calcTotal";
 
-export async function createOrder(year: number, items: OrderInput[]) {
+/**
+ * 確定済みの年への注文は利用者の操作ミスなので例外にしない。
+ * Server Action の例外は必ず 500 になり、本番では文言もクライアントに渡らない
+ */
+export async function createOrder(
+  year: number,
+  items: OrderInput[]
+): Promise<{ ok: true } | { ok: false; message: string }> {
   assertYear(year);
-  await assertYearNotSettled(year);
+
+  const reason = await settledReason(year);
+  if (reason) {
+    return { ok: false, message: reason };
+  }
 
   const total = await calcTotal(year, items);
 
@@ -32,4 +43,6 @@ export async function createOrder(year: number, items: OrderInput[]) {
   revalidatePath("/");
   revalidatePath("/order");
   revalidatePath("/order-history");
+
+  return { ok: true };
 }

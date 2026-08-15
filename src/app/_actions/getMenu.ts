@@ -1,9 +1,12 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
+import { assertYear } from "@/lib/assertYear";
 import { MenuItemWithOptions } from "@/types/types";
 
 export async function getMenu(year: number): Promise<MenuItemWithOptions[]> {
+  assertYear(year);
+
   const menuItems = await prisma.menuItem.findMany({
     where: { year, isActive: true },
     orderBy: { sortOrder: "asc" },

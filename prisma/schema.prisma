@@ -1,0 +1,96 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Year {
+  year      Int        @id
+  label     String
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  MenuItem  MenuItem[]
+  Option    Option[]
+  Order     Order[]
+}
+
+model MenuItem {
+  id             String           @id @default(uuid())
+  year           Int
+  name           String
+  price          Int
+  image          String           @default("")
+  isActive       Boolean          @default(true)
+  sortOrder      Int              @default(0)
+  targetQuantity Int              @default(0)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  Year           Year             @relation(fields: [year], references: [year], onDelete: Cascade)
+  MenuItemOption MenuItemOption[]
+  OrderItem      OrderItem[]
+
+  @@unique([year, name])
+}
+
+model Option {
+  id              String            @id @default(uuid())
+  year            Int
+  name            String
+  price           Int
+  isActive        Boolean           @default(true)
+  sortOrder       Int               @default(0)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  Year            Year              @relation(fields: [year], references: [year], onDelete: Cascade)
+  MenuItemOption  MenuItemOption[]
+  OrderItemOption OrderItemOption[]
+
+  @@unique([year, name])
+}
+
+/// どのメニューにどのオプションを付けられるかの対応表
+model MenuItemOption {
+  menuItemId String
+  optionId   String
+  /// 注文画面で最初から選択済みにするか（カシオレのオレンジなど）
+  isDefault  Boolean  @default(false)
+  MenuItem   MenuItem @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+  Option     Option   @relation(fields: [optionId], references: [id], onDelete: Cascade)
+
+  @@id([menuItemId, optionId])
+}
+
+model Order {
+  id        String      @id @default(uuid())
+  year      Int
+  total     Int
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  Year      Year        @relation(fields: [year], references: [year], onDelete: Cascade)
+  OrderItem OrderItem[]
+
+  @@index([year, createdAt])
+}
+
+model OrderItem {
+  id              String            @id @default(uuid())
+  orderId         String
+  menuItemId      String
+  quantity        Int
+  createdAt       DateTime          @default(now())
+  MenuItem        MenuItem          @relation(fields: [menuItemId], references: [id])
+  Order           Order             @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  OrderItemOption OrderItemOption[]
+}
+
+model OrderItemOption {
+  orderItemId String
+  optionId    String
+  OrderItem   OrderItem @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+  Option      Option    @relation(fields: [optionId], references: [id])
+
+  @@id([orderItemId, optionId])
+}

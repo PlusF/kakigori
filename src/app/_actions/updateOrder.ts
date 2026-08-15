@@ -9,8 +9,12 @@ import { getOrders } from "./getOrders";
 export async function updateOrder(orderId: string, items: OrderInput[]) {
   const order = await prisma.order.findUniqueOrThrow({
     where: { id: orderId },
-    select: { year: true },
+    select: { year: true, settledAt: true },
   });
+  if (order.settledAt) {
+    throw new Error("会計確定済みの注文は編集できません");
+  }
+
   const total = await calcTotal(order.year, items);
 
   await prisma.$transaction([

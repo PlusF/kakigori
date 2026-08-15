@@ -67,6 +67,8 @@ model Order {
   id        String      @id @default(uuid())
   year      Int
   total     Int
+  /// 会計確定日時。確定後は取り消せず、削除もできない
+  settledAt DateTime?
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
   Year      Year        @relation(fields: [year], references: [year], onDelete: Cascade)

@@ -30,6 +30,7 @@ import {
   IconEdit,
   IconTrash,
   IconDots,
+  IconCashRegister,
 } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
 import { useRouter } from "next/navigation";
@@ -37,6 +38,7 @@ import { getOrders } from "../_actions/getOrders";
 import { updateOrder } from "../_actions/updateOrder";
 import { deleteOrder } from "../_actions/deleteOrder";
 import { setServing } from "../_actions/setServing";
+import { settleOrder } from "../_actions/settleOrder";
 import { LoadingContext } from "../_contexts/LoadingContext";
 import { YearContext } from "../_contexts/YearContext";
 import { OrderWithItems, unitPrice } from "@/types/types";
@@ -56,6 +58,7 @@ export default function OrderHistory() {
   const theme = useMantineTheme();
   const [editModalOpened, setEditModalOpened] = useState(false);
   const [deleteModalOpened, setDeleteModalOpened] = useState(false);
+  const [settleModalOpened, setSettleModalOpened] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<OrderWithItems | null>(
     null
   );
@@ -129,15 +132,58 @@ export default function OrderHistory() {
     });
   };
 
+  // サーバー側でも弾いているが、本番では Server Action の例外文言が
+  // クライアントに渡らないためここで理由を出す
+  const rejectSettled = (order: OrderWithItems, action: string) => {
+    if (!order.settledAt) return false;
+    notifications.show({
+      title: "会計確定済み",
+      message: `会計確定済みの注文は${action}できません`,
+      color: "red",
+    });
+    return true;
+  };
+
   const handleEditClick = (order: OrderWithItems) => {
+    if (rejectSettled(order, "編集")) return;
     setSelectedOrder(order);
     setEditedItems(sortedItems(order.OrderItem));
     setEditModalOpened(true);
   };
 
   const handleDeleteClick = (order: OrderWithItems) => {
+    if (rejectSettled(order, "削除")) return;
     setSelectedOrder(order);
     setDeleteModalOpened(true);
+  };
+
+  const handleSettleClick = (order: OrderWithItems) => {
+    setSelectedOrder(order);
+    setSettleModalOpened(true);
+  };
+
+  const handleSettleOrder = async () => {
+    if (!selectedOrder) return;
+
+    startLoading();
+    try {
+      setOrders(await settleOrder(selectedOrder.id));
+      setSettleModalOpened(false);
+      notifications.show({
+        title: "会計確定",
+        message: "会計を確定しました",
+        color: "green",
+      });
+    } catch (error) {
+      console.error("Failed to settle order:", error);
+      notifications.show({
+        title: "エラー",
+        message: "会計の確定に失敗しました",
+        color: "red",
+      });
+    } finally {
+      stopLoading();
+    }
   };
 
   const handleUpdateOrder = async () => {
@@ -262,6 +308,10 @@ export default function OrderHistory() {
                         ? formatTime(order.Serving[0].createdAt)
                         : "—"}
                     </Text>
+                    <Text size="sm" c="dimmed">
+                      会計:{" "}
+                      {order.settledAt ? formatTime(order.settledAt) : "—"}
+                    </Text>
                   </Stack>
                   <Menu position="bottom-end" withArrow>
                     <Menu.Target>
@@ -276,6 +326,14 @@ export default function OrderHistory() {
                       >
                         編集
                       </Menu.Item>
+                      {!order.settledAt && (
+                        <Menu.Item
+                          leftSection={<IconCashRegister size={16} />}
+                          onClick={() => handleSettleClick(order)}
+                        >
+                          会計確定
+                        </Menu.Item>
+                      )}
                       <Menu.Item
                         color="red"
                         leftSection={<IconTrash size={16} />}
@@ -428,6 +486,30 @@ export default function OrderHistory() {
             </Group>
           </Stack>
         )}
+      </Modal>
+
+      <Modal
+        opened={settleModalOpened}
+        onClose={() => setSettleModalOpened(false)}
+        title="会計を確定"
+      >
+        <Stack gap="md">
+          <Text>
+            この注文の会計を確定します。確定すると取り消せず、削除もできなくなります。
+          </Text>
+          <Group justify="flex-end" gap="sm">
+            <Button
+              variant="light"
+              radius="md"
+              onClick={() => setSettleModalOpened(false)}
+            >
+              キャンセル
+            </Button>
+            <Button variant="filled" radius="md" onClick={handleSettleOrder}>
+              確定する
+            </Button>
+          </Group>
+        </Stack>
       </Modal>
 
       <Modal
